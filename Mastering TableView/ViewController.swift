@@ -15,7 +15,7 @@ class ViewController: UITableViewController, UISearchResultsUpdating, UISearchBa
     var webAddresses = [String]()
     
     var searchResults = [Int]()
-    var isPerformingResults: Bool?
+    var isPerformingResults = false
     let searchbar = UISearchController(searchResultsController: nil) //because we are not using another view controller for search bar.
     
     override func viewDidLoad() {
@@ -59,7 +59,7 @@ class ViewController: UITableViewController, UISearchResultsUpdating, UISearchBa
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return isPerformingResults! ? searchResults.count : spaceArray.count
+        return isPerformingResults  ? searchResults.count : spaceArray.count
     }
     
     //This function is used for for swipe to delete the row.
@@ -69,11 +69,15 @@ class ViewController: UITableViewController, UISearchResultsUpdating, UISearchBa
             
             let row = indexPath.row
             
-            self.spaceArray.remove(at: row) //removing the specific row
-            self.imageArr.remove(at: row) //removing the corresponding image of that row
-            
-            view.backgroundColor = .blue
-            action.backgroundColor = .blue
+            if self.isPerformingResults {
+                self.spaceArray.remove(at: self.searchResults[row])
+                self.imageArr.remove(at: self.searchResults[row])
+                self.webAddresses.remove(at: self.searchResults[row])
+            } else {
+                self.spaceArray.remove(at: row) //removing the specific row
+                self.imageArr.remove(at: row) //removing the corresponding image of that row
+                self.webAddresses.remove(at: row)
+            }
             
             completionHandler(true)
             tableView.reloadData()
@@ -89,10 +93,15 @@ class ViewController: UITableViewController, UISearchResultsUpdating, UISearchBa
         
         let row = indexPath.row
         
-        cell.textLabel?.text = spaceArray[row]
-        cell.imageView?.image = UIImage(named: imageArr[row])
+        cell.textLabel?.text = isPerformingResults ? spaceArray[searchResults[row]] : spaceArray[row]
+        cell.imageView?.image = isPerformingResults ? UIImage(named: imageArr[searchResults[row]]) : UIImage(named: imageArr[row])
         
         return cell
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        isPerformingResults = false
+        tableView.reloadData()
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -103,8 +112,14 @@ class ViewController: UITableViewController, UISearchResultsUpdating, UISearchBa
             
             let row = indexPath.row
             
-            destinedVC.urlString = webAddresses[row]
-            destinedVC.navTitle = spaceArray[row]
+            if self.isPerformingResults {
+                destinedVC.urlString = webAddresses[searchResults[row]]
+                destinedVC.navTitle = spaceArray[searchResults[row]]
+            } else {
+                destinedVC.urlString = webAddresses[row]
+                destinedVC.navTitle = spaceArray[row]
+            }
+    
         }
     }
 
